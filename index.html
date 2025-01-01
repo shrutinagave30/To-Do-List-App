@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced To-Do List App</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f4f7fc;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .app-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      color: #5d72ef;
+    }
+
+    #searchBar {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin: 10px 0;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .task-input-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .task-input-section input,
+    .task-input-section select,
+    .task-input-section button {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      min-width: 100px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #5d72ef;
+      color: white;
+      border: none;
+      cursor: pointer;
+      min-width: 120px;
+    }
+
+    button:hover {
+      background: #4a5cd1;
+    }
+
+    #taskList {
+      list-style: none;
+      padding: 0;
+    }
+
+    .task-item {
+      background: #f9f9f9;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .task-info {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .task-name.completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .task-category,
+    .task-priority,
+    .task-due {
+      font-size: 12px;
+      color: #777;
+    }
+
+    .task-actions button {
+      margin-left: 5px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .task-actions .complete-btn {
+      background: #4caf50;
+      color: white;
+    }
+
+    .task-actions .delete-btn {
+      background: #f44336;
+      color: white;
+    }
+
+    .task-actions button:hover {
+      opacity: 0.9;
+    }
+
+    .clear-completed-btn {
+      background: #ff9800;
+      color: white;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 15px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .clear-completed-btn:hover {
+      background: #e68900;
+    }
+
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .progress-bar {
+      flex: 1;
+      background: #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #4caf50;
+      width: 0;
+    }
+
+    /* Priority Color Coding */
+    .task-name.low-priority {
+      color: #8bc34a;
+    }
+
+    .task-name.medium-priority {
+      color: #ff9800;
+    }
+
+    .task-name.high-priority {
+      color: #f44336;
+    }
+
+    /* Media Queries for Responsiveness */
+    @media (max-width: 768px) {
+      .app-container {
+        padding: 15px;
+        max-width: 100%;
+      }
+
+      .task-input-section {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>TaskMaster: Your Task Manager</h1>
+      <input type="text" id="searchBar" placeholder="Search tasks..." />
+      <div class="progress-container">
+        <span>Progress:</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="task-input-section">
+      <input type="text" id="taskInput" placeholder="Enter task..." required/>
+      <select id="category" required>
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+      </select>
+      <select id="priority" required>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+      <input type="date" id="dueDate" />
+      <button id="addTaskBtn">Add Task</button>
+    </div>
+
+    <ul id="taskList"></ul>
+    <button class="clear-completed-btn" id="clearCompletedBtn">Clear Completed Tasks</button>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const categoryInput = document.getElementById('category');
+    const priorityInput = document.getElementById('priority');
+    const dueDateInput = document.getElementById('dueDate');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const taskList = document.getElementById('taskList');
+    const searchBar = document.getElementById('searchBar');
+    const progressFill = document.getElementById('progressFill');
+    const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    document.addEventListener('DOMContentLoaded', renderTasks);
+    addTaskBtn.addEventListener('click', addTask);
+    clearCompletedBtn.addEventListener('click', clearCompletedTasks);
+    searchBar.addEventListener('input', filterTasks);
+
+    function addTask() {
+      const taskName = taskInput.value.trim();
+      const category = categoryInput.value;
+      const priority = priorityInput.value;
+      const dueDate = dueDateInput.value;
+
+      if (!taskName || !dueDate) {
+        alert('Please fill out all fields!');
+        return;
+      }
+
+      const newTask = {
+        taskName,
+        category,
+        priority,
+        dueDate,
+        completed: false,
+      };
+
+      tasks.push(newTask);
+      saveToLocalStorage();
+      renderTasks();
+
+      taskInput.value = '';
+      categoryInput.value = 'Work';
+      priorityInput.value = 'Low';
+      dueDateInput.value = '';
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach(task => addTaskToDOM(task));
+      updateProgress();
+    }
+
+    function addTaskToDOM(task) {
+      const li = document.createElement('li');
+      li.classList.add('task-item');
+
+      li.innerHTML = `
+        <div class="task-info">
+          <span class="task-name ${task.completed ? 'completed' : ''} ${getPriorityClass(task.priority)}">${task.taskName}</span>
+          <span class="task-category">[${task.category}]</span>
+          <span class="task-priority">(${task.priority})</span>
+          <span class="task-due">Due: ${task.dueDate}</span>
+        </div>
+        <div class="task-actions">
+          <button class="complete-btn">${task.completed ? 'Undo' : 'Complete'}</button>
+          <button class="delete-btn">Delete</button>
+        </div>
+      `;
+
+      li.querySelector('.complete-btn').addEventListener('click', () => toggleComplete(task));
+      li.querySelector('.delete-btn').addEventListener('click', () => deleteTask(task));
+
+      taskList.appendChild(li);
+    }
+
+    function getPriorityClass(priority) {
+      if (priority === 'Low') return 'low-priority';
+      if (priority === 'Medium') return 'medium-priority';
+      return 'high-priority';
+    }
+
+    function toggleComplete(task) {
+      task.completed = !task.completed;
+      saveToLocalStorage();
+      renderTasks();
+    }
+
+    function deleteTask(taskToDelete) {
+      tasks = tasks.filter(task => task !== taskToDelete);
+      saveToLocalStorage();
+      renderTasks();
+    }
+
+    function filterTasks() {
+      const searchTerm = searchBar.value.toLowerCase();
+      const filteredTasks = tasks.filter(task =>
+        task.taskName.toLowerCase().includes(searchTerm) || task.category.toLowerCase().includes(searchTerm)
+      );
+
+      taskList.innerHTML = '';
+      filteredTasks.forEach(task => addTaskToDOM(task));
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function updateProgress() {
+      const completedTasks = tasks.filter(task => task.completed).length;
+      const progress = tasks.length ? (completedTasks / tasks.length) * 100 : 0;
+      progressFill.style.width = `${progress}%`;
+    }
+
+    function clearCompletedTasks() {
+      tasks = tasks.filter(task => !task.completed);
+      saveToLocalStorage();
+      renderTasks();
+    }
+  </script>
+</body>
+</html>
